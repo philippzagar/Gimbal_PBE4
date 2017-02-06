@@ -1,0 +1,1 @@
+This repo contains the software for the Gimbal project in PBE4 2016/17
