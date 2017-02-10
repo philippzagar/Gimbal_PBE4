@@ -11,8 +11,6 @@ import time
 #GPIO Library
 import RPi.GPIO as GPIO
 
-math.sin()
-
 # Power management registers
 power_mgmt_1 = 0x6b
 power_mgmt_2 = 0x6c
@@ -29,6 +27,25 @@ accel_scale_x = -498
 accel_scale_y = 1577
 accel_scale_z = 1077
 
+# GPIO Pins
+EN1 = 17
+EN2 = 27
+EN3 = 22
+
+IN1 = 16
+IN2 = 20
+IN3 = 21
+
+# Motor Direction
+direction = True
+
+# Sinus for every Phase
+sin1 = 0.0
+sin2 = math.sin((2*math.pi) / 3)
+sin3 = math.sin((4*math.pi) / 3)
+
+# x Value for Sinus Function
+x = 0.0
 
 address = 0x68  # This is the address value read via the i2cdetect command
 
@@ -165,16 +182,16 @@ while 1:
     print("Time:{0:.2f} Pitch:{1:.1f} X_Total:{2:.1f} X_Last:{3:.1f} Roll:{4:.1f} Y_Total:{5:.1f} Y_Last:{6:.1f}"
           .format(time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
 
-    query = """
-        INSERT INTO testGyroData
-        (id, dateTime, Time, Pitch, X_Total, X_Last, Roll, Y_Total, Y_Last, hex_adress)
-        VALUES
-        (NULL, "time.time()", "time.time() - now", {rotation_x}, {gyro_total_x}, {last_x}, {rotation_y},
-         {gyro_total_y}, {last_y}, {address});
-        """
+    # query = """
+    #    INSERT INTO testGyroData
+    #    (id, dateTime, Time, Pitch, X_Total, X_Last, Roll, Y_Total, Y_Last, hex_adress)
+    #    VALUES
+    #    (NULL, {time}, {time_difference}, {rotation_x}, {gyro_total_x}, {last_x}, {rotation_y},
+    #     {gyro_total_y}, {last_y}, {address});
+    #    """
 
-    db.query(query.format(rotation_x=rotation_x, gyro_total_x=gyro_total_x, last_x=last_x, rotation_y=rotation_y,
-                          gyro_total_y=gyro_total_y, last_y=last_y, address=address))
+    # db.insert(query.format(time = time.time(), time_difference = time.time() - now, rotation_x=rotation_x, gyro_total_x=gyro_total_x, last_x=last_x, rotation_y=rotation_y,
+    #                      gyro_total_y=gyro_total_y, last_y=last_y, address=hex(address)))
 # Stop GPIO Pins
 p1.stop()
 p2.stop()
