@@ -1,9 +1,17 @@
 #!/usr/bin/python
 
+#I2C Library
 import smbus
+#MySQL Library
 import MySQLdb as MySQL
+#Math Library
 import math
+#Time Library
 import time
+#GPIO Library
+import RPi.GPIO as GPIO
+
+math.sin()
 
 # Power management registers
 power_mgmt_1 = 0x6b
@@ -12,13 +20,23 @@ power_mgmt_2 = 0x6c
 gyro_scale = 131.0
 accel_scale = 16384.0
 
+#TODO
+gyro_scale_x = 87
+gyro_scale_y = 4
+gyro_scale_z = -27
+
+accel_scale_x = -498
+accel_scale_y = 1577
+accel_scale_z = 1077
+
+
 address = 0x68  # This is the address value read via the i2cdetect command
 
 class Database:
 
     host = 'localhost'
     user = 'root'
-    password = 'Philipp2404'
+    password = 'raspberry'
     db = 'gimbal'
 
     def __init__(self):
@@ -89,6 +107,20 @@ bus.write_byte_data(address, power_mgmt_1, 0)
 # Open DB Conneciton
 db = Database()
 
+# Setup GPIO Pins
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(13, GPIO.OUT)
+GPIO.setup(19, GPIO.OUT)
+GPIO.setup(26, GPIO.OUT)
+
+p1 = GPIO.PWM(13, 50)  # channel=12 frequency=50Hz
+p2 = GPIO.PWM(19, 50)  # channel=12 frequency=50Hz
+p3 = GPIO.PWM(26, 50)  # channel=12 frequency=50Hz
+
+p1.start(0)
+p2.start(0)
+p3.start(0)
+
 now = time.time()
 
 K = 0.98
@@ -130,13 +162,23 @@ while 1:
     last_x = K * (last_x + gyro_x_delta) + (K1 * rotation_x)
     last_y = K * (last_y + gyro_y_delta) + (K1 * rotation_y)
 
-    print("Time:{0:.4f} Pitch:{1:.2f} X_Total:{2:.2f} X_Last:{3:.2f} Roll:{4:.2f} Y_Total:{5:.2f} Y_Last:{6:.2f}"
+    print("Time:{0:.2f} Pitch:{1:.1f} X_Total:{2:.1f} X_Last:{3:.1f} Roll:{4:.1f} Y_Total:{5:.1f} Y_Last:{6:.1f}"
           .format(time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
 
     query = """
         INSERT INTO testGyroData
         (id, dateTime, Time, Pitch, X_Total, X_Last, Roll, Y_Total, Y_Last, hex_adress)
         VALUES
-        (%d, %s, %s, %l, %l, %l, %l, %l, %l, %l, %s),
-        (time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y))
+        (NULL, "time.time()", "time.time() - now", {rotation_x}, {gyro_total_x}, {last_x}, {rotation_y},
+         {gyro_total_y}, {last_y}, {address});
         """
+
+    db.query(query.format(rotation_x=rotation_x, gyro_total_x=gyro_total_x, last_x=last_x, rotation_y=rotation_y,
+                          gyro_total_y=gyro_total_y, last_y=last_y, address=address))
+# Stop GPIO Pins
+p1.stop()
+p2.stop()
+p3.stop()
+
+# Cleanup GPIO Pins
+GPIO.cleanup()
