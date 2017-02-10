@@ -1,8 +1,15 @@
 #!/usr/bin/python
 
+#I2C Library
 import smbus
+#MySQL Library
+import MySQLdb as MySQL
+#Math Library
 import math
+#Time Library
 import time
+#GPIO Library
+import RPi.GPIO as GPIO
 
 # Power management registers
 power_mgmt_1 = 0x6b
@@ -11,7 +18,64 @@ power_mgmt_2 = 0x6c
 gyro_scale = 131.0
 accel_scale = 16384.0
 
+#TODO
+gyro_scale_x = 87
+gyro_scale_y = 4
+gyro_scale_z = -27
+
+accel_scale_x = -498
+accel_scale_y = 1577
+accel_scale_z = 1077
+
+# GPIO Pins
+EN1 = 17
+EN2 = 27
+EN3 = 22
+
+IN1 = 16
+IN2 = 20
+IN3 = 21
+
+# Motor Direction
+direction = True
+
+# Sinus for every Phase
+sin1 = 0.0
+sin2 = math.sin((2*math.pi) / 3)
+sin3 = math.sin((4*math.pi) / 3)
+
+# x Value for Sinus Function
+x = 0.0
+
 address = 0x68  # This is the address value read via the i2cdetect command
+
+class Database:
+
+    host = 'localhost'
+    user = 'root'
+    password = 'raspberry'
+    db = 'gimbal'
+
+    def __init__(self):
+        self.connection = MySQL.connect(self.host, self.user, self.password, self.db)
+        self.cursor = self.connection.cursor()
+
+    def insert(self, query):
+        try:
+            self.cursor.execute(query)
+            self.connection.commit()
+        except:
+            self.connection.rollback()
+
+    def query(self, query):
+        cursor = self.connection.cursor( MySQL.cursors.DictCursor )
+        cursor.execute(query)
+
+        return cursor.fetchall()
+
+    def __del__(self):
+        self.connection.close()
+
 
 def read_all():
     raw_gyro_data = bus.read_i2c_block_data(address, 0x43, 6)
@@ -57,6 +121,23 @@ bus = smbus.SMBus(1)  # or bus = smbus.SMBus(1) for Revision 2 boards
 # Now wake the 6050 up as it starts in sleep mode
 bus.write_byte_data(address, power_mgmt_1, 0)
 
+# Open DB Conneciton
+db = Database()
+
+# Setup GPIO Pins
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(13, GPIO.OUT)
+GPIO.setup(19, GPIO.OUT)
+GPIO.setup(26, GPIO.OUT)
+
+p1 = GPIO.PWM(13, 50)  # channel=12 frequency=50Hz
+p2 = GPIO.PWM(19, 50)  # channel=12 frequency=50Hz
+p3 = GPIO.PWM(26, 50)  # channel=12 frequency=50Hz
+
+p1.start(0)
+p2.start(0)
+p3.start(0)
+
 now = time.time()
 
 K = 0.98
@@ -75,9 +156,10 @@ gyro_offset_y = gyro_scaled_y
 gyro_total_x = (last_x) - gyro_offset_x
 gyro_total_y = (last_y) - gyro_offset_y
 
-print("{0:.4f} {1:.2f} {2:.2f} {3:.2f} {4:.2f} {5:.2f} {6:.2f}".format( time.time() - now, (last_x), gyro_total_x, (last_x), (last_y), gyro_total_y, (last_y)))
+print("Time:{0:.4f} X_Last:{1:.2f} X_Total:{2:.2f} X_Last:{3:.2f} Y_Last:{4:.2f} Y_Total:{5:.2f} Y_Last:{6:.2f}"
+      .format( time.time() - now, (last_x), gyro_total_x, (last_x), (last_y), gyro_total_y, (last_y)))
 
-for i in range(0, int(3.0 / time_diff)):
+while 1:
     time.sleep(time_diff - 0.005)
 
     (gyro_scaled_x, gyro_scaled_y, gyro_scaled_z, accel_scaled_x, accel_scaled_y, accel_scaled_z) = read_all()
@@ -97,4 +179,23 @@ for i in range(0, int(3.0 / time_diff)):
     last_x = K * (last_x + gyro_x_delta) + (K1 * rotation_x)
     last_y = K * (last_y + gyro_y_delta) + (K1 * rotation_y)
 
-    print("{0:.4f} {1:.2f} {2:.2f} {3:.2f} {4:.2f} {5:.2f} {6:.2f}".format( time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
+    print("Time:{0:.2f} Pitch:{1:.1f} X_Total:{2:.1f} X_Last:{3:.1f} Roll:{4:.1f} Y_Total:{5:.1f} Y_Last:{6:.1f}"
+          .format(time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
+
+    # query = """
+    #    INSERT INTO testGyroData
+    #    (id, dateTime, Time, Pitch, X_Total, X_Last, Roll, Y_Total, Y_Last, hex_adress)
+    #    VALUES
+    #    (NULL, {time}, {time_difference}, {rotation_x}, {gyro_total_x}, {last_x}, {rotation_y},
+    #     {gyro_total_y}, {last_y}, {address});
+    #    """
+
+    # db.insert(query.format(time = time.time(), time_difference = time.time() - now, rotation_x=rotation_x, gyro_total_x=gyro_total_x, last_x=last_x, rotation_y=rotation_y,
+    #                      gyro_total_y=gyro_total_y, last_y=last_y, address=hex(address)))
+# Stop GPIO Pins
+p1.stop()
+p2.stop()
+p3.stop()
+
+# Cleanup GPIO Pins
+GPIO.cleanup()
