@@ -1,31 +1,17 @@
 #!/usr/bin/python
 
-#I2C Library
-import smbus
-#MySQL Library
-import MySQLdb as MySQL
-#Math Library
-import math
-#Time Library
+# I2C library
+# import smbus
+# math library
+# import math
+# time library
 import time
-#GPIO Library
+# GPIO library
 import RPi.GPIO as GPIO
-
-# Power management registers
-power_mgmt_1 = 0x6b
-power_mgmt_2 = 0x6c
-
-gyro_scale = 131.0
-accel_scale = 16384.0
-
-#TODO
-gyro_scale_x = 87
-gyro_scale_y = 4
-gyro_scale_z = -27
-
-accel_scale_x = -498
-accel_scale_y = 1577
-accel_scale_z = 1077
+# MySQL library
+from includes.MySQL import *
+# MPU read library
+from includes.functions import *
 
 # GPIO Pins
 EN1 = 17
@@ -46,80 +32,6 @@ sin3 = math.sin((4*math.pi) / 3)
 
 # x Value for Sinus Function
 x = 0.0
-
-address = 0x68  # This is the address value read via the i2cdetect command
-
-class Database:
-
-    host = 'localhost'
-    user = 'root'
-    password = 'raspberry'
-    db = 'gimbal'
-
-    def __init__(self):
-        self.connection = MySQL.connect(self.host, self.user, self.password, self.db)
-        self.cursor = self.connection.cursor()
-
-    def insert(self, query):
-        try:
-            self.cursor.execute(query)
-            self.connection.commit()
-        except:
-            self.connection.rollback()
-
-    def query(self, query):
-        cursor = self.connection.cursor( MySQL.cursors.DictCursor )
-        cursor.execute(query)
-
-        return cursor.fetchall()
-
-    def __del__(self):
-        self.connection.close()
-
-
-def read_all():
-    raw_gyro_data = bus.read_i2c_block_data(address, 0x43, 6)
-    raw_accel_data = bus.read_i2c_block_data(address, 0x3b, 6)
-
-    gyro_scaled_x = twos_compliment((raw_gyro_data[0] << 8) + raw_gyro_data[1]) / gyro_scale
-    gyro_scaled_y = twos_compliment((raw_gyro_data[2] << 8) + raw_gyro_data[3]) / gyro_scale
-    gyro_scaled_z = twos_compliment((raw_gyro_data[4] << 8) + raw_gyro_data[5]) / gyro_scale
-
-    accel_scaled_x = twos_compliment((raw_accel_data[0] << 8) + raw_accel_data[1]) / accel_scale
-    accel_scaled_y = twos_compliment((raw_accel_data[2] << 8) + raw_accel_data[3]) / accel_scale
-    accel_scaled_z = twos_compliment((raw_accel_data[4] << 8) + raw_accel_data[5]) / accel_scale
-
-    return (gyro_scaled_x, gyro_scaled_y, gyro_scaled_z, accel_scaled_x, accel_scaled_y, accel_scaled_z)
-
-def twos_compliment(val):
-    if (val >= 0x8000):
-        return -((65535 - val) + 1)
-    else:
-        return val
-
-def dist(a, b):
-    return math.sqrt((a * a) + (b * b))
-
-def get_x_rotation(x,y,z):
-    radians = math.atan2(y, dist(x,z))
-    return math.degrees(radians)
-
-def get_y_rotation(x,y,z):
-    radians = math.atan2(x, dist(y,z))
-    return -math.degrees(radians)
-
-"""
-Not possible due to drift of Yaw value
-
-def get_z_rotation(x,y,z):
-    radians = math.atan2()
-    return math.degrees(radians)
-"""
-
-bus = smbus.SMBus(1)  # or bus = smbus.SMBus(1) for Revision 2 boards
-
-# Now wake the 6050 up as it starts in sleep mode
-bus.write_byte_data(address, power_mgmt_1, 0)
 
 # Open DB Conneciton
 db = Database()
@@ -182,16 +94,16 @@ while 1:
     print("Time:{0:.2f} Pitch:{1:.1f} X_Total:{2:.1f} X_Last:{3:.1f} Roll:{4:.1f} Y_Total:{5:.1f} Y_Last:{6:.1f}"
           .format(time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
 
-    # query = """
-    #    INSERT INTO testGyroData
-    #    (id, dateTime, Time, Pitch, X_Total, X_Last, Roll, Y_Total, Y_Last, hex_adress)
-    #    VALUES
-    #    (NULL, {time}, {time_difference}, {rotation_x}, {gyro_total_x}, {last_x}, {rotation_y},
-    #     {gyro_total_y}, {last_y}, {address});
-    #    """
+    query = """
+        INSERT INTO testGyroData
+        (id, dateTime, Time, Pitch, X_Total, X_Last, Roll, Y_Total, Y_Last, hex_adress)
+        VALUES
+        (NULL, {time}, {time_difference}, {rotation_x}, {gyro_total_x}, {last_x}, {rotation_y},
+         {gyro_total_y}, {last_y}, {address});
+        """
 
-    # db.insert(query.format(time = time.time(), time_difference = time.time() - now, rotation_x=rotation_x, gyro_total_x=gyro_total_x, last_x=last_x, rotation_y=rotation_y,
-    #                      gyro_total_y=gyro_total_y, last_y=last_y, address=hex(address)))
+    #db.insert(query.format(time = time.time(), time_difference = time.time() - now, rotation_x=rotation_x, gyro_total_x=gyro_total_x, last_x=last_x, rotation_y=rotation_y,
+    #                      gyro_total_y=gyro_total_y, last_y=last_y, address=address))
 # Stop GPIO Pins
 p1.stop()
 p2.stop()
