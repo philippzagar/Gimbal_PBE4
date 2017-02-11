@@ -6,49 +6,17 @@
 # import math
 # time library
 import time
-# GPIO library
-import RPi.GPIO as GPIO
+# To import files from includes directory
+# import sys
+# import os
+# sys.path.append(os.path.abspath("/home/pi/PBE4 Gimbal/includes"))
 # MySQL library
-from includes.MySQL import *
+from MySQL import *
 # MPU read library
-from includes.functions import *
-
-# GPIO Pins
-EN1 = 17
-EN2 = 27
-EN3 = 22
-
-IN1 = 16
-IN2 = 20
-IN3 = 21
-
-# Motor Direction
-direction = True
-
-# Sinus for every Phase
-sin1 = 0.0
-sin2 = math.sin((2*math.pi) / 3)
-sin3 = math.sin((4*math.pi) / 3)
-
-# x Value for Sinus Function
-x = 0.0
+from functions import *
 
 # Open DB Conneciton
 db = Database()
-
-# Setup GPIO Pins
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(13, GPIO.OUT)
-GPIO.setup(19, GPIO.OUT)
-GPIO.setup(26, GPIO.OUT)
-
-p1 = GPIO.PWM(13, 50)  # channel=12 frequency=50Hz
-p2 = GPIO.PWM(19, 50)  # channel=12 frequency=50Hz
-p3 = GPIO.PWM(26, 50)  # channel=12 frequency=50Hz
-
-p1.start(0)
-p2.start(0)
-p3.start(0)
 
 now = time.time()
 
@@ -91,8 +59,14 @@ while 1:
     last_x = K * (last_x + gyro_x_delta) + (K1 * rotation_x)
     last_y = K * (last_y + gyro_y_delta) + (K1 * rotation_y)
 
-    print("Time:{0:.2f} Pitch:{1:.1f} X_Total:{2:.1f} X_Last:{3:.1f} Roll:{4:.1f} Y_Total:{5:.1f} Y_Last:{6:.1f}"
-          .format(time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
+    print("Time:{0:.2f} Pitch:{1:.1f} Roll:{2:.1f}".format(time.time() - now, (rotation_x), (rotation_y)))
+
+    # Sin Values
+    # print("Sin2:{0:.2f} Sin3:{1:.2f}").format(sin2, sin3)
+
+    # Full Outprint
+    # print("Time:{0:.2f} Pitch:{1:.1f} X_Total:{2:.1f} X_Last:{3:.1f} Roll:{4:.1f} Y_Total:{5:.1f} Y_Last:{6:.1f}"
+    #      .format(time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
 
     query = """
         INSERT INTO testGyroData
@@ -104,10 +78,3 @@ while 1:
 
     #db.insert(query.format(time = time.time(), time_difference = time.time() - now, rotation_x=rotation_x, gyro_total_x=gyro_total_x, last_x=last_x, rotation_y=rotation_y,
     #                      gyro_total_y=gyro_total_y, last_y=last_y, address=address))
-# Stop GPIO Pins
-p1.stop()
-p2.stop()
-p3.stop()
-
-# Cleanup GPIO Pins
-GPIO.cleanup()
