@@ -5,7 +5,7 @@ import math
 # time library
 import time
 # MySQL library
-from MySQL import *
+from includes.MySQL import *
 
 class BLDC:
     # GPIO Pins

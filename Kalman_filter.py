@@ -11,9 +11,9 @@ import time
 # import os
 # sys.path.append(os.path.abspath("/home/pi/PBE4 Gimbal/includes"))
 # MySQL library
-from MySQL import *
+from includes.MySQL import *
 # MPU read library
-from functions import *
+from includes.functions import *
 
 # Open DB Conneciton
 db = Database()
