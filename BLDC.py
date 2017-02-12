@@ -2,6 +2,8 @@
 import RPi.GPIO as GPIO
 # Math library
 import math
+# time library
+import time
 # MySQL library
 from MySQL import *
 
@@ -45,6 +47,8 @@ class BLDC:
     # Database
     db = None
 
+    now = None
+
     def __init__(self):
         # Open DB Conneciton
         db = Database()
@@ -69,6 +73,9 @@ class BLDC:
         self.dc1 = self.DC_Calculation(self.sin1)
         self.dc2 = self.DC_Calculation(self.sin2)
         self.dc3 = self.DC_Calculation(self.sin3)
+
+        # Time
+        self.now = time.time()
 
     def start(self):
         # Enable Pins
@@ -122,8 +129,29 @@ class BLDC:
     def printSinusValues(self):
         print("Sin1:{0:.2f} Sin2:{1:.2f} Sin3:{2:.2f}".format(self.sin1, self.sin2, self.sin3))
 
+        query = """
+        INSERT INTO SinusValues
+        (id, time, sin1, sin2, sin3)
+        VALUES
+        (NULL, {time}, {sin1}, {sin2}, {sin3});
+        """
+
+        # Insert query to DB
+        # self.db.insert(query.format(time = time.time() - self.now, sin1 = self.sin1, sin2 = self.sin2, sin3 = self.sin3))
+
     def printDCValues(self):
         print("DC1:{0:.2f} DC2:{1:.2f} DC3:{2:.2f}".format(self.dc1, self.dc2, self.dc3))
+
+        query = """
+        INSERT INTO DCValues
+        (id, time, dc1, dc2, dc3)
+        VALUES
+        (NULL, {time}, {dc1}, {dc2}, {dc3});
+        """
+
+        # Insert query to DB
+        # self.db.insert(query.format(time = time.time() - self.now, dc1 = self.dc1, dc2 = self.dc2, dc3 = self.dc3))
+
 
     def __del__(self):
         # Cleanup GPIO Pins
