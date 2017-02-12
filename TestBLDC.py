@@ -5,13 +5,11 @@ import time
 
 bldc = BLDC()
 
-bldc.start_BLDC()
+bldc.start()
 
-for i in range(3000):
-    bldc.run_BLDC()
+for i in range(1000):
+    bldc.run()
     bldc.printDCValues()
     time.sleep(0.01)
 
-bldc.stop_BLDC()
-
-bldc.__del__()
+bldc.stop()

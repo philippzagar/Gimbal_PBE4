@@ -2,8 +2,10 @@
 import RPi.GPIO as GPIO
 # Math library
 import math
+# time library
+import time
 # MySQL library
-# from MySQL import *
+from MySQL import *
 
 class BLDC:
     # GPIO Pins
@@ -45,9 +47,11 @@ class BLDC:
     # Database
     db = None
 
+    now = None
+
     def __init__(self):
         # Open DB Conneciton
-        # db = Database()
+        db = Database()
 
         # Setup GPIO Pins
         GPIO.setmode(GPIO.BCM)
@@ -70,11 +74,10 @@ class BLDC:
         self.dc2 = self.DC_Calculation(self.sin2)
         self.dc3 = self.DC_Calculation(self.sin3)
 
-    @staticmethod
-    def DC_Calculation(sin):
-        return 50 * sin + 50
+        # Time
+        self.now = time.time()
 
-    def start_BLDC(self):
+    def start(self):
         # Enable Pins
         self.en1 = GPIO.output(self.EN1, GPIO.HIGH)
         self.en2 = GPIO.output(self.EN2, GPIO.HIGH)
@@ -85,7 +88,7 @@ class BLDC:
         self.in2.start(self.dc2)
         self.in3.start(self.dc3)
 
-    def stop_BLDC(self):
+    def stop(self):
         # Enable Pins
         self.en1 = GPIO.output(self.EN1, GPIO.LOW)
         self.en2 = GPIO.output(self.EN2, GPIO.LOW)
@@ -96,8 +99,9 @@ class BLDC:
         self.in2.stop(self.dc2)
         self.in3.stop(self.dc3)
 
-    def run_BLDC(self):
+    def run(self):
         # Calculate new Sinus Values
+        # with 0.1: pro 2*PI ändert sich PWM 62 Mal
         self.Sinus_Calculate(0.1)
 
         # Duty Cycle
@@ -109,7 +113,12 @@ class BLDC:
         self.in2.ChangeDutyCycle(self.dc2)
         self.in3.ChangeDutyCycle(self.dc3)
 
+    @staticmethod
+    def DC_Calculation(sin):
+        return 50 * sin + 50
+
     def Sinus_Calculate(self, step):
+        # Increase x values by step
         self.x1 += step
         self.x2 += step
         self.x3 += step
@@ -122,8 +131,29 @@ class BLDC:
     def printSinusValues(self):
         print("Sin1:{0:.2f} Sin2:{1:.2f} Sin3:{2:.2f}".format(self.sin1, self.sin2, self.sin3))
 
+        query = """
+        INSERT INTO SinusValues
+        (id, time, sin1, sin2, sin3)
+        VALUES
+        (NULL, {time}, {sin1}, {sin2}, {sin3});
+        """
+
+        # Insert query to DB
+        # self.db.insert(query.format(time = time.time() - self.now, sin1 = self.sin1, sin2 = self.sin2, sin3 = self.sin3))
+
     def printDCValues(self):
         print("DC1:{0:.2f} DC2:{1:.2f} DC3:{2:.2f}".format(self.dc1, self.dc2, self.dc3))
+
+        query = """
+        INSERT INTO DCValues
+        (id, time, dc1, dc2, dc3)
+        VALUES
+        (NULL, {time}, {dc1}, {dc2}, {dc3});
+        """
+
+        # Insert query to DB
+        # self.db.insert(query.format(time = time.time() - self.now, dc1 = self.dc1, dc2 = self.dc2, dc3 = self.dc3))
+
 
     def __del__(self):
         # Cleanup GPIO Pins
