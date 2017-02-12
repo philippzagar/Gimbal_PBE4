@@ -3,7 +3,7 @@ import RPi.GPIO as GPIO
 # Math library
 import math
 # MySQL library
-# from MySQL import *
+from MySQL import *
 
 class BLDC:
     # GPIO Pins
@@ -47,7 +47,7 @@ class BLDC:
 
     def __init__(self):
         # Open DB Conneciton
-        # db = Database()
+        db = Database()
 
         # Setup GPIO Pins
         GPIO.setmode(GPIO.BCM)
@@ -70,11 +70,7 @@ class BLDC:
         self.dc2 = self.DC_Calculation(self.sin2)
         self.dc3 = self.DC_Calculation(self.sin3)
 
-    @staticmethod
-    def DC_Calculation(sin):
-        return 50 * sin + 50
-
-    def start_BLDC(self):
+    def start(self):
         # Enable Pins
         self.en1 = GPIO.output(self.EN1, GPIO.HIGH)
         self.en2 = GPIO.output(self.EN2, GPIO.HIGH)
@@ -85,7 +81,7 @@ class BLDC:
         self.in2.start(self.dc2)
         self.in3.start(self.dc3)
 
-    def stop_BLDC(self):
+    def stop(self):
         # Enable Pins
         self.en1 = GPIO.output(self.EN1, GPIO.LOW)
         self.en2 = GPIO.output(self.EN2, GPIO.LOW)
@@ -96,7 +92,7 @@ class BLDC:
         self.in2.stop(self.dc2)
         self.in3.stop(self.dc3)
 
-    def run_BLDC(self):
+    def run(self):
         # Calculate new Sinus Values
         self.Sinus_Calculate(0.1)
 
@@ -108,6 +104,10 @@ class BLDC:
         self.in1.ChangeDutyCycle(self.dc1)
         self.in2.ChangeDutyCycle(self.dc2)
         self.in3.ChangeDutyCycle(self.dc3)
+
+    @staticmethod
+    def DC_Calculation(sin):
+        return 50 * sin + 50
 
     def Sinus_Calculate(self, step):
         self.x1 += step
