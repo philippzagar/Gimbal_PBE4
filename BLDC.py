@@ -101,6 +101,7 @@ class BLDC:
 
     def run(self):
         # Calculate new Sinus Values
+        # with 0.1: pro 2*PI ändert sich PWM 62 Mal
         self.Sinus_Calculate(0.1)
 
         # Duty Cycle
@@ -117,6 +118,7 @@ class BLDC:
         return 50 * sin + 50
 
     def Sinus_Calculate(self, step):
+        # Increase x values by step
         self.x1 += step
         self.x2 += step
         self.x3 += step

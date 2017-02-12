@@ -25,10 +25,13 @@ K1 = 1 - K
 
 time_diff = 0.01
 
-(gyro_scaled_x, gyro_scaled_y, gyro_scaled_z, accel_scaled_x, accel_scaled_y, accel_scaled_z) = read_all()
+# MPU Instance
+mpu = MPU()
 
-last_x = get_x_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
-last_y = get_y_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
+(gyro_scaled_x, gyro_scaled_y, gyro_scaled_z, accel_scaled_x, accel_scaled_y, accel_scaled_z) = mpu.read_all()
+
+last_x = mpu.get_x_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
+last_y = mpu.get_y_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
 
 gyro_offset_x = gyro_scaled_x
 gyro_offset_y = gyro_scaled_y
@@ -42,7 +45,7 @@ print("Time:{0:.4f} X_Last:{1:.2f} X_Total:{2:.2f} X_Last:{3:.2f} Y_Last:{4:.2f}
 while 1:
     time.sleep(time_diff - 0.005)
 
-    (gyro_scaled_x, gyro_scaled_y, gyro_scaled_z, accel_scaled_x, accel_scaled_y, accel_scaled_z) = read_all()
+    (gyro_scaled_x, gyro_scaled_y, gyro_scaled_z, accel_scaled_x, accel_scaled_y, accel_scaled_z) = mpu.read_all()
 
     gyro_scaled_x -= gyro_offset_x
     gyro_scaled_y -= gyro_offset_y
@@ -53,8 +56,8 @@ while 1:
     gyro_total_x += gyro_x_delta
     gyro_total_y += gyro_y_delta
 
-    rotation_x = get_x_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
-    rotation_y = get_y_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
+    rotation_x = mpu.get_x_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
+    rotation_y = mpu.get_y_rotation(accel_scaled_x, accel_scaled_y, accel_scaled_z)
 
     last_x = K * (last_x + gyro_x_delta) + (K1 * rotation_x)
     last_y = K * (last_y + gyro_y_delta) + (K1 * rotation_y)
