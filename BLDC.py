@@ -47,6 +47,7 @@ class BLDC:
     # Database
     db = None
 
+    # Time
     now = None
 
     def __init__(self):
@@ -112,6 +113,12 @@ class BLDC:
         self.in1.ChangeDutyCycle(self.dc1)
         self.in2.ChangeDutyCycle(self.dc2)
         self.in3.ChangeDutyCycle(self.dc3)
+
+    def reverseRotation(self):
+        if(self.direction == True):
+            self.direction = False
+        else:
+            self.direction = True
 
     @staticmethod
     def DC_Calculation(sin):

@@ -59,11 +59,3 @@ class MPU:
     def get_y_rotation(self, x,y,z):
         radians = math.atan2(x, self.dist(y,z))
         return -math.degrees(radians)
-
-    """
-    Not possible due to drift of Yaw value
-
-    def get_z_rotation(self, x,y,z):
-        radians = math.atan2()
-        return math.degrees(radians)
-    """

@@ -6,27 +6,23 @@
 # import math
 # time library
 import time
-# To import files from includes directory
-# import sys
-# import os
-# sys.path.append(os.path.abspath("/home/pi/PBE4 Gimbal/includes"))
 # MySQL library
 from includes.MySQL import *
 # MPU read library
 from includes.functions import *
 
-# Open DB Conneciton
-db = Database()
-
-now = time.time()
-
+# Kalman Filter values
 K = 0.98
 K1 = 1 - K
 
-time_diff = 0.01
-
+# Instance of DB Connection
+db = Database()
 # MPU Instance
 mpu = MPU()
+
+now = time.time()
+
+time_diff = 0.01
 
 (gyro_scaled_x, gyro_scaled_y, gyro_scaled_z, accel_scaled_x, accel_scaled_y, accel_scaled_z) = mpu.read_all()
 
@@ -71,13 +67,13 @@ while 1:
     # print("Time:{0:.2f} Pitch:{1:.1f} X_Total:{2:.1f} X_Last:{3:.1f} Roll:{4:.1f} Y_Total:{5:.1f} Y_Last:{6:.1f}"
     #      .format(time.time() - now, (rotation_x), (gyro_total_x), (last_x), (rotation_y), (gyro_total_y), (last_y)))
 
-    query = """
-        INSERT INTO testGyroData
-        (id, dateTime, Time, Pitch, X_Total, X_Last, Roll, Y_Total, Y_Last, hex_adress)
-        VALUES
-        (NULL, {time}, {time_difference}, {rotation_x}, {gyro_total_x}, {last_x}, {rotation_y},
-         {gyro_total_y}, {last_y}, {address});
-        """
+    # query = """
+    #    INSERT INTO testGyroData
+    #    (id, dateTime, Time, Pitch, X_Total, X_Last, Roll, Y_Total, Y_Last, hex_adress)
+    #    VALUES
+    #    (NULL, {time}, {time_difference}, {rotation_x}, {gyro_total_x}, {last_x}, {rotation_y},
+    #     {gyro_total_y}, {last_y}, {address});
+    #    """
 
     #db.insert(query.format(time = time.time(), time_difference = time.time() - now, rotation_x=rotation_x, gyro_total_x=gyro_total_x, last_x=last_x, rotation_y=rotation_y,
     #                      gyro_total_y=gyro_total_y, last_y=last_y, address=address))
