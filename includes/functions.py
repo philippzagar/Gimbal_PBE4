@@ -13,7 +13,10 @@ class MPU:
     gyro_scale = 131.0
     accel_scale = 16384.0
 
+    bus = None
+
     #TODO
+    """
     gyro_scale_x = 87
     gyro_scale_y = 4
     gyro_scale_z = -27
@@ -21,11 +24,13 @@ class MPU:
     accel_scale_x = -498
     accel_scale_y = 1577
     accel_scale_z = 1077
+    """
 
-    bus = smbus.SMBus(1)  # or bus = smbus.SMBus(1) for Revision 2 boards
+    def __init__(self):
+        self.bus = smbus.SMBus(1)  # or bus = smbus.SMBus(1) for Revision 2 boards
 
-    # Now wake the 6050 up as it starts in sleep mode
-    bus.write_byte_data(address, power_mgmt_1, 0)
+        # Now wake the 6050 up as it starts in sleep mode
+        self.bus.write_byte_data(self.address, self.power_mgmt_1, 0)
 
     def read_all(self):
         raw_gyro_data = self.bus.read_i2c_block_data(self.address, 0x43, 6)
