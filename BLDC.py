@@ -29,7 +29,7 @@ class BLDC:
     direction = True
 
     # PWM Frequency
-    pwm_freq = 3200
+    pwm_freq = 1000
 
     # Sinus for every Phase
     x1 = 0.0
@@ -66,9 +66,9 @@ class BLDC:
         GPIO.setup(self.IN3, GPIO.OUT)
 
         # In Pins
-        self.in1 = GPIO.PWM(self.IN1, self.pwm_freq)  # channel=12 frequency=50Hz
-        self.in2 = GPIO.PWM(self.IN2, self.pwm_freq)  # channel=12 frequency=50Hz
-        self.in3 = GPIO.PWM(self.IN3, self.pwm_freq)  # channel=12 frequency=50Hz
+        self.in1 = GPIO.PWM(self.IN1, self.pwm_freq)
+        self.in2 = GPIO.PWM(self.IN2, self.pwm_freq)
+        self.in3 = GPIO.PWM(self.IN3, self.pwm_freq)
 
         # Duty Cycle
         self.dc1 = self.DC_Calculation(self.sin1)
@@ -103,6 +103,7 @@ class BLDC:
     def run(self):
         # Calculate new Sinus Values
         # with 0.1: pro 2*PI aendert sich PWM 62 Mal
+
         self.Sinus_Calculate(0.1)
 
         # Duty Cycle
@@ -113,6 +114,7 @@ class BLDC:
         self.in1.ChangeDutyCycle(self.dc1)
         self.in2.ChangeDutyCycle(self.dc2)
         self.in3.ChangeDutyCycle(self.dc3)
+
 
     def reverseRotation(self):
         if(self.direction == True):

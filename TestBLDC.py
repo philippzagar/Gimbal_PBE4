@@ -7,9 +7,9 @@ bldc = BLDC()
 
 bldc.start()
 
-for i in range(1000):
+for i in range(50000):
     bldc.run()
     bldc.printDCValues()
-    time.sleep(0.01)
+    time.sleep(0.1)
 
 bldc.stop()

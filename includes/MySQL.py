@@ -1,3 +1,4 @@
+# nur unter Python 2
 import MySQLdb as MySQL
 
 class Database:
