@@ -1,4 +1,7 @@
-# nur unter Python 2
+# Python 3 Implementation
+# Error: Package pymysql is not found - nur einmal aufgetreten
+import pymysql
+pymysql.install_as_MySQLdb()
 import MySQLdb as MySQL
 
 class Database:

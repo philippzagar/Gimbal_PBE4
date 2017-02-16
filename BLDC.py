@@ -6,6 +6,8 @@ import math
 import time
 # MySQL library
 from includes.MySQL import *
+# new library for increased PWM frequency
+import pigpio
 
 class BLDC:
     # GPIO Pins
@@ -50,9 +52,14 @@ class BLDC:
     # Time
     now = None
 
+    # Test with new library to increase PWM Frequency
+    port1 = None
+    port2 = None
+    port3 = None
+
     def __init__(self):
         # Open DB Conneciton
-        db = Database()
+        # db = Database()
 
         # Setup GPIO Pins
         GPIO.setmode(GPIO.BCM)
@@ -78,6 +85,11 @@ class BLDC:
         # Time
         self.now = time.time()
 
+        # PiGPIO Tests
+        self.port1 = pigpio.pi()
+        self.port2 = pigpio.pi()
+        self.port3 = pigpio.pi()
+
     def start(self):
         # Enable Pins
         self.en1 = GPIO.output(self.EN1, GPIO.HIGH)
@@ -88,6 +100,24 @@ class BLDC:
         self.in1.start(self.dc1)
         self.in2.start(self.dc2)
         self.in3.start(self.dc3)
+
+    def start_pigpio(self):
+        # Enable Pins
+        self.en1 = GPIO.output(self.EN1, GPIO.HIGH)
+        self.en2 = GPIO.output(self.EN2, GPIO.HIGH)
+        self.en3 = GPIO.output(self.EN3, GPIO.HIGH)
+
+        self.port1.set_PWM_frequency(self.IN1,100000)
+        self.port1.set_PWM_range(self.IN1, 100)  # now  25 1/4,   50 1/2,   75 3/4 on
+        self.port1.set_PWM_dutycycle(self.IN1, self.dc1) # PWM 1/2 on
+
+        self.port2.set_PWM_frequency(self.IN2,100000)
+        self.port2.set_PWM_range(self.IN2, 100)  # now  25 1/4,   50 1/2,   75 3/4 on
+        self.port2.set_PWM_dutycycle(self.IN2, self.dc2) # PWM 1/2 on
+
+        self.port3.set_PWM_frequency(self.IN3,100000)
+        self.port3.set_PWM_range(self.IN3, 100)  # now  25 1/4,   50 1/2,   75 3/4 on
+        self.port3.set_PWM_dutycycle(self.IN3, self.dc3) # PWM 1/2 on
 
     def stop(self):
         # Enable Pins
@@ -104,7 +134,7 @@ class BLDC:
         # Calculate new Sinus Values
         # with 0.1: pro 2*PI aendert sich PWM 62 Mal
 
-        self.Sinus_Calculate(0.1)
+        self.Sinus_Calculate(1)
 
         # Duty Cycle
         self.dc1 = self.DC_Calculation(self.sin1)
@@ -115,6 +145,20 @@ class BLDC:
         self.in2.ChangeDutyCycle(self.dc2)
         self.in3.ChangeDutyCycle(self.dc3)
 
+    def run_pigpio(self):
+        # Calculate new Sinus Values
+        # with 0.1: pro 2*PI aendert sich PWM 62 Mal
+
+        self.Sinus_Calculate(0.01)
+
+        # Duty Cycle
+        self.dc1 = self.DC_Calculation(self.sin1)
+        self.dc2 = self.DC_Calculation(self.sin2)
+        self.dc3 = self.DC_Calculation(self.sin3)
+
+        self.port1.set_PWM_dutycycle(self.IN1, self.dc1)
+        self.port2.set_PWM_dutycycle(self.IN2, self.dc2)
+        self.port3.set_PWM_dutycycle(self.IN3, self.dc3)
 
     def reverseRotation(self):
         if(self.direction == True):

@@ -5,11 +5,13 @@ import time
 
 bldc = BLDC()
 
-bldc.start()
+#bldc.start()
+bldc.start_pigpio()
 
-for i in range(50000):
-    bldc.run()
+while 1:
+    #bldc.run()
+    bldc.run_pigpio()
     bldc.printDCValues()
-    time.sleep(0.1)
+    time.sleep(0.001)
 
 bldc.stop()
