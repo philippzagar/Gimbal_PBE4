@@ -216,7 +216,7 @@ class BLDC:
         # Calculate new Sinus Values
         # with 0.1: pro 2*PI aendert sich PWM 62 Mal
 
-        self.Sinus_Calculate(0.01)
+        self.Sinus_Calculate(0.001)
 
         # Duty Cycle
         self.dc1 = self.DC_Calculation(self.sin1)
