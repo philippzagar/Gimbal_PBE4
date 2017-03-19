@@ -9,7 +9,7 @@ import time
 # MySQL library
 from includes.MySQL import *
 # MPU read library
-from includes.functions import *
+from includes.MPU import *
 
 # Kalman Filter values
 K = 0.98

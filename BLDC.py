@@ -30,35 +30,34 @@ class BLDC:
     IN8 = 24
     IN9 = 23
 
-    in1 = None
-    in2 = None
-    in3 = None
-
     # Motor Direction
     direction = True
 
     # PWM Frequency
     pwm_freq = 1000
 
+    # Step Speed
+    step = None
+
     # Sinus for every Phase
-    x1 = 0.0
-    x2 = (2 * math.pi) / 3
-    x3 = (4 * math.pi) / 3
-    x4 = 0.0
-    x5 = (2 * math.pi) / 3
-    x6 = (4 * math.pi) / 3
-    x7 = 0.0
-    x8 = (2 * math.pi) / 3
-    x9 = (4 * math.pi) / 3
-    sin1 = math.sin(x1)
-    sin2 = math.sin(x2)
-    sin3 = math.sin(x3)
-    sin4 = math.sin(x1)
-    sin5 = math.sin(x2)
-    sin6 = math.sin(x3)
-    sin7 = math.sin(x1)
-    sin8 = math.sin(x2)
-    sin9 = math.sin(x3)
+    sin1_value = 0.0
+    sin2_value = (2 * math.pi) / 3
+    sin3_value = (4 * math.pi) / 3
+    sin4_value = 0.0
+    sin5_value = (2 * math.pi) / 3
+    sin6_value = (4 * math.pi) / 3
+    sin7_value = 0.0
+    sin8_value = (2 * math.pi) / 3
+    sin9_value = (4 * math.pi) / 3
+    sin1 = math.sin(sin1_value)
+    sin2 = math.sin(sin2_value)
+    sin3 = math.sin(sin3_value)
+    sin4 = math.sin(sin4_value)
+    sin5 = math.sin(sin5_value)
+    sin6 = math.sin(sin6_value)
+    sin7 = math.sin(sin7_value)
+    sin8 = math.sin(sin8_value)
+    sin9 = math.sin(sin9_value)
 
     # Duty Cycle
     dc1 = 0
@@ -98,15 +97,28 @@ class BLDC:
         GPIO.setup(self.EN1, GPIO.OUT)
         GPIO.setup(self.EN2, GPIO.OUT)
         GPIO.setup(self.EN3, GPIO.OUT)
-        # Setup In Pins
-        GPIO.setup(self.IN1, GPIO.OUT)
-        GPIO.setup(self.IN2, GPIO.OUT)
-        GPIO.setup(self.IN3, GPIO.OUT)
 
-        # In Pins
-        self.in1 = GPIO.PWM(self.IN1, self.pwm_freq)
-        self.in2 = GPIO.PWM(self.IN2, self.pwm_freq)
-        self.in3 = GPIO.PWM(self.IN3, self.pwm_freq)
+        # PiGPIO
+        self.port1 = pigpio.pi()
+        self.port2 = pigpio.pi()
+        self.port3 = pigpio.pi()
+        self.port4 = pigpio.pi()
+        self.port5 = pigpio.pi()
+        self.port6 = pigpio.pi()
+        self.port7 = pigpio.pi()
+        self.port8 = pigpio.pi()
+        self.port9 = pigpio.pi()
+
+        # Set GPIO as Output
+        self.port1.set_mode(self.IN1, pigpio.OUTPUT)
+        self.port2.set_mode(self.IN2, pigpio.OUTPUT)
+        self.port3.set_mode(self.IN3, pigpio.OUTPUT)
+        self.port4.set_mode(self.IN4, pigpio.OUTPUT)
+        self.port5.set_mode(self.IN5, pigpio.OUTPUT)
+        self.port6.set_mode(self.IN6, pigpio.OUTPUT)
+        self.port7.set_mode(self.IN7, pigpio.OUTPUT)
+        self.port8.set_mode(self.IN8, pigpio.OUTPUT)
+        self.port9.set_mode(self.IN9, pigpio.OUTPUT)
 
         # Duty Cycle
         self.dc1 = self.DC_Calculation(self.sin1)
@@ -122,27 +134,8 @@ class BLDC:
         # Time
         self.now = time.time()
 
-        # PiGPIO Tests
-        self.port1 = pigpio.pi()
-        self.port2 = pigpio.pi()
-        self.port3 = pigpio.pi()
-        self.port4 = pigpio.pi()
-        self.port5 = pigpio.pi()
-        self.port6 = pigpio.pi()
-        self.port7 = pigpio.pi()
-        self.port8 = pigpio.pi()
-        self.port9 = pigpio.pi()
-
-    def start(self):
-        # Enable Pins
-        self.en1 = GPIO.output(self.EN1, GPIO.HIGH)
-        self.en2 = GPIO.output(self.EN2, GPIO.HIGH)
-        self.en3 = GPIO.output(self.EN3, GPIO.HIGH)
-
-        # Input Pins
-        self.in1.start(self.dc1)
-        self.in2.start(self.dc2)
-        self.in3.start(self.dc3)
+        # Step
+        self.step = 0.01
 
     def start_pigpio(self):
         # Enable Pins
@@ -186,37 +179,11 @@ class BLDC:
         self.port9.set_PWM_range(self.IN9, 100)  # now  25 1/4,   50 1/2,   75 3/4 on
         self.port9.set_PWM_dutycycle(self.IN9, self.dc9) # PWM 1/2 on
 
-    def stop(self):
-        # Enable Pins
-        self.en1 = GPIO.output(self.EN1, GPIO.LOW)
-        self.en2 = GPIO.output(self.EN2, GPIO.LOW)
-        self.en3 = GPIO.output(self.EN3, GPIO.LOW)
-
-        # Input Pins
-        self.in1.stop(self.dc1)
-        self.in2.stop(self.dc2)
-        self.in3.stop(self.dc3)
-
-    def run(self):
-        # Calculate new Sinus Values
-        # with 0.1: pro 2*PI aendert sich PWM 62 Mal
-
-        self.Sinus_Calculate(1)
-
-        # Duty Cycle
-        self.dc1 = self.DC_Calculation(self.sin1)
-        self.dc2 = self.DC_Calculation(self.sin2)
-        self.dc3 = self.DC_Calculation(self.sin3)
-
-        self.in1.ChangeDutyCycle(self.dc1)
-        self.in2.ChangeDutyCycle(self.dc2)
-        self.in3.ChangeDutyCycle(self.dc3)
-
     def run_pigpio(self):
         # Calculate new Sinus Values
         # with 0.1: pro 2*PI aendert sich PWM 62 Mal
 
-        self.Sinus_Calculate(0.001)
+        self.Sinus_Calculate()
 
         # Duty Cycle
         self.dc1 = self.DC_Calculation(self.sin1)
@@ -239,38 +206,65 @@ class BLDC:
         self.port8.set_PWM_dutycycle(self.IN8, self.dc8)
         self.port9.set_PWM_dutycycle(self.IN9, self.dc9)
 
+    def stop_pigpio(self):
+        # Enable Pins
+        self.en1 = GPIO.output(self.EN1, GPIO.LOW)
+        self.en2 = GPIO.output(self.EN2, GPIO.LOW)
+        self.en3 = GPIO.output(self.EN3, GPIO.LOW)
+
+    def test_BLDC(self):
+        # Enable Pins
+        self.en1 = GPIO.output(self.EN1, GPIO.HIGH)
+        self.en2 = GPIO.output(self.EN2, GPIO.HIGH)
+        self.en3 = GPIO.output(self.EN3, GPIO.HIGH)
+
+        self.port1.set_PWM_frequency(self.IN1,100000)
+        self.port1.set_PWM_range(self.IN1, 100)  # now  25 1/4,   50 1/2,   75 3/4 on
+        self.port1.set_PWM_dutycycle(self.IN1, 100) # PWM 1/2 on
+
+        self.port2.set_PWM_frequency(self.IN2,100000)
+        self.port2.set_PWM_range(self.IN2, 100)  # now  25 1/4,   50 1/2,   75 3/4 on
+        self.port2.set_PWM_dutycycle(self.IN2, 100) # PWM 1/2 on
+
+        self.port3.set_PWM_frequency(self.IN3,100000)
+        self.port3.set_PWM_range(self.IN3, 100)  # now  25 1/4,   50 1/2,   75 3/4 on
+        self.port3.set_PWM_dutycycle(self.IN3, 100) # PWM 1/2 on
+
     def reverseRotation(self):
         if(self.direction == True):
             self.direction = False
         else:
             self.direction = True
 
+    def changeSpeed(self, speed):
+        self.step = speed
+
     @staticmethod
     def DC_Calculation(sin):
         return 50 * sin + 50
 
-    def Sinus_Calculate(self, step):
+    def Sinus_Calculate(self):
         # Increase x values by step
-        self.x1 += step
-        self.x2 += step
-        self.x3 += step
-        self.x4 += step
-        self.x5 += step
-        self.x6 += step
-        self.x7 += step
-        self.x8 += step
-        self.x9 += step
+        self.sin1_value += self.step
+        self.sin2_value += self.step
+        self.sin3_value += self.step
+        self.sin4_value += self.step
+        self.sin5_value += self.step
+        self.sin6_value += self.step
+        self.sin7_value += self.step
+        self.sin8_value += self.step
+        self.sin9_value += self.step
 
         # Sinus for every Phase
-        self.sin1 = math.sin(self.x1)
-        self.sin2 = math.sin(self.x2)
-        self.sin3 = math.sin(self.x3)
-        self.sin4 = math.sin(self.x4)
-        self.sin5 = math.sin(self.x5)
-        self.sin6 = math.sin(self.x6)
-        self.sin7 = math.sin(self.x7)
-        self.sin8 = math.sin(self.x8)
-        self.sin9 = math.sin(self.x9)
+        self.sin1 = math.sin(self.sin1_value)
+        self.sin2 = math.sin(self.sin2_value)
+        self.sin3 = math.sin(self.sin3_value)
+        self.sin4 = math.sin(self.sin4_value)
+        self.sin5 = math.sin(self.sin5_value)
+        self.sin6 = math.sin(self.sin6_value)
+        self.sin7 = math.sin(self.sin7_value)
+        self.sin8 = math.sin(self.sin8_value)
+        self.sin9 = math.sin(self.sin9_value)
 
     def printSinusValues(self):
         print("Sin1:{0:.2f} Sin2:{1:.2f} Sin3:{2:.2f}".format(self.sin1, self.sin2, self.sin3))
@@ -303,3 +297,12 @@ class BLDC:
     def __del__(self):
         # Cleanup GPIO Pins
         GPIO.cleanup()
+        self.port1.stop()
+        self.port2.stop()
+        self.port3.stop()
+        self.port4.stop()
+        self.port5.stop()
+        self.port6.stop()
+        self.port7.stop()
+        self.port8.stop()
+        self.port9.stop()
